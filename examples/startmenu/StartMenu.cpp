@@ -66,7 +66,7 @@ void LogMenu()
     {
         spdlog::info("other campaign {}: \"{}\"", dao::Utf8(campaign.name), dao::Utf8(campaign.displayName));
     }
-    spdlog::info("the chooser's campaigns: \"{}\" and \"{}\"", dao::Utf8(menu::Name(menu::MainCampaign::Origins)),
+    spdlog::info(R"(the chooser's campaigns: "{}" and "{}")", dao::Utf8(menu::Name(menu::MainCampaign::Origins)),
                  dao::Utf8(menu::Name(menu::MainCampaign::Awakening)));
 }
 
