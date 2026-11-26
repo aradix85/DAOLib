@@ -1,7 +1,8 @@
 // Example: conversations (dao/Dialogue.h).
 //
 // Talk to anyone, and the log follows the conversation: each NPC line with
-// its speaker, the replies offered in their order on the screen, and the
+// its speaker, and again as it comes on the screen with the creature that
+// speaks it, the replies offered in their order on the screen, and the
 // replies the conversation had but did not offer, because their condition
 // failed, with the plot flag or script that decided it. The verdicts are
 // left as the engine gave them; a plugin that returned something else from
@@ -74,6 +75,10 @@ extern "C" __declspec(dllexport) bool __cdecl DAOLib_Load(const dao::LoaderInfo 
     dao::dialogue::OnNpcLine([](dao::dialogue::Conversation &, const dao::dialogue::Line &line) {
         spdlog::info("[{}] {} (line {})", Utf8(line.speaker), Text(line), line.index);
     });
+    dao::dialogue::OnLineShown(
+        [](dao::dialogue::Conversation &, const dao::dialogue::Line &line, dao::ObjectId speaker) {
+            spdlog::info("  on the screen: {} (line {}, spoken by 0x{:x})", Text(line), line.index, speaker);
+        });
     dao::dialogue::OnReplies([](dao::dialogue::Conversation &, std::span<const dao::dialogue::Line> replies) {
         for (std::size_t i = 0; i < replies.size(); ++i)
         {

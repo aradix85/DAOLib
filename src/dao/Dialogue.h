@@ -91,6 +91,12 @@ void OnLineAvailable(std::function<bool(Conversation &, const Line &line, bool a
 // Adds a callback that runs when an NPC line is about to be spoken.
 void OnNpcLine(std::function<void(Conversation &, const Line &line)> observer);
 
+// Adds a callback that runs once an NPC line is on the screen, its voice begun: once for each
+// line the player is shown. OnNpcLine also runs for a line the conversation only passes through,
+// one it skips or one with no text.
+// @param observer receives the conversation, the line, and the creature or object that speaks it
+void OnLineShown(std::function<void(Conversation &, const Line &line, ObjectId speaker)> observer);
+
 // Adds a callback that runs once the replies to an NPC line are on the screen. It receives them
 // in the order shown.
 void OnReplies(std::function<void(Conversation &, std::span<const Line> replies)> observer);
