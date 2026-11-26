@@ -479,14 +479,24 @@ struct Popup
     };
     std::wstring text; // the box's text, looked up from its string reference
     std::vector<Button> buttons;
+    // The text in the box's field, for a box that asks for text (a name); nullopt for a box
+    // without a field.
+    std::optional<std::wstring> input;
 };
 // Returns the message box the game is showing, the game's own or one a screen's movie shows
 // itself. A tool that cannot see the screen can use it, for example a test whose load has stopped
 // at "this save requires the following content".
 // @return the box; nullopt when no box is up, or before the GUI system is up
 //
-// Call it on the game thread. The box's input field, checkbox and picker are not read.
+// Call it on the game thread. The box's checkbox and picker are not read.
 std::optional<Popup> CurrentPopup();
+
+// Puts text in the field of the message box that is up: it is what the game reads when
+// PressPopupButton presses a button.
+// @return false, with nothing done, when no box is up or the box has no field
+//
+// The field drawn on the screen keeps what the player typed, and a click of a button sends that.
+bool SetPopupInput(std::wstring_view text);
 
 // Presses a button of the message box that is up, as a click does: the box closes as the popup
 // movie closes it, then the game receives the button's callback.
