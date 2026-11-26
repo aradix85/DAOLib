@@ -1268,7 +1268,37 @@ std::optional<Popup> CurrentPopup()
         box.buttons.push_back({data::Text(L"GUIPopupLayer.Label" + n).value_or(L""),
                                data::Text(L"GUIPopupLayer.Callback" + n).value_or(L"")});
     }
+    if (data::Number(L"GUIPopupLayer.InputBox").value_or(0) != 0)
+    {
+        box.input = data::Text(L"GUIPopupLayer.InputText").value_or(L"");
+    }
     return box;
+}
+
+// The box's field, read 2026-11-26 in popuplayer.gfx (patch003's copy, FFDec 26.3.0) after the
+// Eluvian server's reading (its src/game/Shared.cpp, 2026-10-03): a box that asks for text is
+// shown with GUIPopupLayer.InputBox set, its field (the box's TextInput_mc.TextField) started
+// from GUIPopupLayer.InputText; a button's action in the movie writes the field's text back to
+// InputText (SetValueUnicode) before it sends the button's message, whose handler reads it
+// there. PressPopupButton sends the message without the movie's action, so InputText is what the
+// game then reads. The field on the screen is left as it is: the box's clip is the one
+// attachMovie named "null" (above), and a path through it, _level0.null.TextInput_mc.TextField.text,
+// read and set nothing (seen), so a click of a button still sends what the screen's field holds.
+// Seen in play 2026-11-26, Steam's game on Windows 11, through the Eluvian server and with
+// examples/popup: the scripts' ShowPopup(379897, type, hero, TRUE) gave InputBox 1 and an empty
+// InputText for the types 1 (Yes and No), 2 (Confirm), 3 and 4 (OK), and no box for 0; the
+// example read the empty field, put "Proef" in and read it back, and it stood in InputText after
+// Yes was pressed and the box was gone.
+bool SetPopupInput(std::wstring_view text)
+{
+    const auto popups = PopupMovie();
+    data::Attribute *input = data::Find(L"GUIPopupLayer.InputText");
+    if (!popups || !BoxUp(*popups) || input == nullptr || data::Number(L"GUIPopupLayer.InputBox").value_or(0) == 0)
+    {
+        return false;
+    }
+    input->SetText(text);
+    return true;
 }
 
 // A button's action in the movie (ButtonInit's OnButtonAction, read 2026-10-18 as above) sets

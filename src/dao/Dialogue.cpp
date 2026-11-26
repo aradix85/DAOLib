@@ -132,6 +132,36 @@ bool __fastcall PlayLine(Conversation *conversation, int edx, std::uint32_t inde
     return g_playLine.Original()(conversation, edx, index);
 }
 
+// GameModeDialog::ShowLine: __thiscall (the speaker's id, the line), `ret 8`. PlayLine calls it
+// only for a line the player is shown, so the observers hear of it once it is on the screen
+// (dao/Addresses.h has the reading). Seen in play 2026-11-26 with examples/dialogue, Steam's
+// game on Windows 11, the hero's father at Castle Cousland: OnNpcLine ran three times, twice a
+// millisecond apart for the first line as it did in 2026-09-30's play, and this twice, once a
+// line, each with the father's id (0x203) where the file names the speaker OWNER.
+using ShowLineFn = void(__fastcall *)(void *, int, ObjectId, std::uint32_t);
+Detour<ShowLineFn> g_showLine;
+std::vector<std::function<void(Conversation &, const Line &, ObjectId)>> g_shown;
+
+void __fastcall ShowLine(void *mode, int edx, ObjectId speaker, std::uint32_t index)
+{
+    g_showLine.Original()(mode, edx, speaker, index);
+    const auto observers = Copy(g_shown);
+    if (mode == nullptr || observers.empty())
+    {
+        return;
+    }
+    auto *conversation = At<Conversation *>(mode, kConversation);
+    const auto line = conversation != nullptr ? conversation->LineAt(index) : std::nullopt;
+    if (!line)
+    {
+        return;
+    }
+    for (const auto &observer : observers)
+    {
+        detail::Guard("a dialogue line shown callback", [&] { observer(*conversation, *line, speaker); });
+    }
+}
+
 // GameModeDialog::ShowResponses: __thiscall (const list *, bool), `ret 8`.
 // The observers see the list once it is on the screen.
 using ShowRepliesFn = void(__fastcall *)(void *, int, const void *, bool);
@@ -190,6 +220,7 @@ void Attach()
     std::call_once(once, [] {
         g_available.Attach(addr::kConversation_IsLineAvailable, &Available);
         g_playLine.Attach(addr::kConversation_PlayLine, &PlayLine);
+        g_showLine.Attach(addr::kGameModeDialog_ShowLine, &ShowLine);
         g_showReplies.Attach(addr::kGameModeDialog_ShowResponses, &ShowReplies);
         g_advance.Attach(addr::kConversation_Advance, &Advance);
     });
@@ -387,6 +418,13 @@ void OnNpcLine(std::function<void(Conversation &, const Line &line)> observer)
     Attach();
     const std::lock_guard lock(g_lock);
     g_npcLines.push_back(std::move(observer));
+}
+
+void OnLineShown(std::function<void(Conversation &, const Line &line, ObjectId speaker)> observer)
+{
+    Attach();
+    const std::lock_guard lock(g_lock);
+    g_shown.push_back(std::move(observer));
 }
 
 void OnReplies(std::function<void(Conversation &, std::span<const Line> replies)> observer)

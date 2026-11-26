@@ -2632,6 +2632,15 @@ DAO_ADDRESS(kConversation_LineSpeaker, 21297)
 DAO_ADDRESS(kConversation_LineListener, 21298)
 DAO_ADDRESS(kGameModeDialog_ShowResponses, 13949)
 DAO_ADDRESS(kGameModeDialog_AddResponse, 13948)
+// GameModeDialog::ShowLine (0x0068E250, __thiscall (speaker's id, line),
+// `ret 8`) puts an NPC line on the screen: the previous voice stopped, the
+// journal's history given the line, the speaker kept at +0x16C and the line
+// at +0x174, the voice begun and the text handed to the conversation movie
+// (dev/AUDIO.md, dev/PLOTS.md). Its one caller is Conversation::PlayLine
+// (0x007F2128), past its tests for a line that is skipped or has neither
+// text nor a cut, so it runs only for a line the player is shown. Read
+// 2026-11-26 in Steam's exe, GOG's code (DAOLib #344's branches).
+DAO_ADDRESS(kGameModeDialog_ShowLine, 13898)
 DAO_ADDRESS(kConversationData_Constructor, 13933)
 DAO_ADDRESS(kConversationData_AddResponse, 13944)
 DAO_ADDRESS(kResponse_Constructor, 13885)
