@@ -337,6 +337,10 @@ add_library(
     src/dao/Board.cpp
     src/dao/CharGen.cpp
     src/dao/StartMenu.cpp
+    src/dao/MainMenu.cpp
+    src/dao/Tutorials.cpp
+    src/dao/AreaMap.cpp
+    src/dao/Inventory.cpp
     src/dao/Frame.cpp
     src/dao/Camera.cpp
     src/dao/Clock.cpp
